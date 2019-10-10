@@ -1,0 +1,133 @@
+/*********************************************************************
+       Push _buttons for TIVA
+ *********************************************************************/
+
+#include <stdbool.h>
+#include <stdint.h>
+// TivaC specific includes
+extern "C"
+{
+  #include <driverlib/sysctl.h>
+  #include <driverlib/gpio.h>
+  #include "inc/hw_ints.h"
+  #include "inc/hw_memmap.h"
+  #include "driverlib/interrupt.h"
+  #include "driverlib/pin_map.h"
+  #include "driverlib/timer.h"
+  #include "driverlib/pwm.h"
+}
+// ROS includes
+#include <ros.h>
+#include <std_msgs/String.h>
+#include <std_msgs/Int32.h>
+#include <std_msgs/Float64.h> //include Float64
+
+#define PWM_FREQUENCY 100
+
+// ROS nodehandle
+ros::NodeHandle nh;
+int top_num=5;
+std_msgs::Int32 float_msg; // float64 msg
+
+int staten=0x00;
+int statef=0x00;
+
+ros::Publisher chatter("push_counter", &float_msg);
+
+extern void GPIOJ_pulsesA(void);
+
+uint32_t g_ui32SysClock;
+
+
+void GPIOJ_pulsesA(void)
+{
+		int status =0;
+		status = GPIOIntStatus(GPIO_PORTJ_BASE,true);
+		GPIOIntClear(GPIO_PORTJ_BASE,status);
+    SysCtlDelay(14000000);
+    float_msg.data=float_msg.data+1;
+    
+}
+//intettupt handler for periodic timer
+void Timer0IntHandler(void)
+{
+    ROM_TimerIntClear(TIMER0_BASE, TIMER_TIMA_TIMEOUT);
+    ROM_IntMasterDisable();
+    //---- Add user logic
+    if(float_msg.data == 1){staten=0x02;statef=0x00;}
+    if(float_msg.data == 2){staten=0x01;statef=0x00;}
+    if(float_msg.data == 3){staten=0x00;statef=0x10;}
+    if(float_msg.data == 4){staten=0x00;statef=0x01;}
+    if(float_msg.data == 5){staten=0x03;statef=0x11;}
+    chatter.publish(&float_msg);
+  
+    //-----------
+    ROM_IntMasterEnable();
+}
+
+int main(void)
+{
+  // TivaC application specific code
+  MAP_FPUEnable();
+  MAP_FPULazyStackingEnable();
+  uint32_t ui32SysClkFreq,ui32PWMClock,ui32Load;
+  // Run from the PLL at 120 MHz.
+  ui32SysClkFreq=MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ | SYSCTL_OSC_MAIN |
+                          SYSCTL_USE_PLL | SYSCTL_CFG_VCO_480), TM4C129FREQ);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOJ);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOG);// from datasheet, PG0 is PWM pin
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM0);// from datasheet, enables PWM0
+
+  //Salidas digitales
+  GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE,GPIO_PIN_0| GPIO_PIN_1);
+  GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE,GPIO_PIN_0| GPIO_PIN_4);
+  GPIOPinWrite(GPIO_PORTN_BASE,GPIO_PIN_1 | GPIO_PIN_0,0x01);
+  GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_4 | GPIO_PIN_0,0x01);
+  
+  GPIOPinTypeGPIOInput(GPIO_PORTJ_BASE,GPIO_PIN_0);
+	GPIOPadConfigSet(GPIO_PORTJ_BASE,GPIO_PIN_0,GPIO_STRENGTH_2MA,GPIO_PIN_TYPE_STD_WPU);
+  TimerConfigure(TIMER0_BASE, TIMER_CFG_PERIODIC);
+  TimerLoadSet(TIMER0_BASE, TIMER_A, 240000000); //-- period=1s
+  TimerEnable(TIMER0_BASE, TIMER_A);
+  PWMClockSet(PWM0_BASE,PWM_SYSCLK_DIV_64);//set the prescaler DIV=64
+	GPIOPinConfigure(GPIO_PG0_M0PWM4);//configures PWM pin
+	GPIOPinTypePWM(GPIO_PORTG_BASE,GPIO_PIN_0);////configures PWM pin
+	ui32PWMClock=ui32SysClkFreq/64;//calculates the PWM clock
+	ui32Load=(ui32PWMClock/PWM_FREQUENCY)-1;//calculates the number of levels
+	PWMGenConfigure(PWM0_BASE,PWM_GEN_2,PWM_GEN_MODE_DOWN);//configures the generator
+	PWMGenPeriodSet(PWM0_BASE,PWM_GEN_2,ui32Load);//set the max PWM level
+
+	PWMPulseWidthSet(PWM0_BASE,PWM_OUT_4,ui32Load/2);//set an specific duty cycle
+	PWMOutputState(PWM0_BASE,PWM_OUT_4_BIT,true);
+	PWMGenEnable(PWM0_BASE,PWM_GEN_2);
+
+
+  GPIOIntTypeSet(GPIO_PORTJ_BASE,GPIO_INT_PIN_0,GPIO_FALLING_EDGE);
+	GPIOIntRegister(GPIO_PORTJ_BASE,GPIOJ_pulsesA);
+	GPIOIntEnable(GPIO_PORTJ_BASE,GPIO_INT_PIN_0);
+  // TImer interrupt setup
+	ROM_IntEnable(INT_TIMER0A); //enable interrupt TIMER0A
+	ROM_TimerIntEnable(TIMER0_BASE, TIMER_TIMA_TIMEOUT);//defines the event
+	TimerIntRegister(TIMER0_BASE, TIMER_A,Timer0IntHandler);//defines callback function--interrupt handler
+	ROM_TimerEnable(TIMER0_BASE, TIMER_A); // final enable
+
+  // ROS nodehandle initialization and topic registration
+  nh.initNode();
+  nh.advertise(chatter);// registers publisher
+  //nh.subscribe(subs_pose);//registers Subscriber
+  PWMPulseWidthSet(PWM0_BASE,PWM_OUT_4,15000);
+  float_msg.data=0;
+  while (1)
+  {
+    // Handle all communications and callbacks.
+    nh.spinOnce();
+    GPIOPinWrite(GPIO_PORTN_BASE,GPIO_PIN_1 | GPIO_PIN_0, staten);
+    GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_4 | GPIO_PIN_0,statef); 
+    // Delay for a bit.
+    nh.getHardware()->delay(100);
+  }
+}

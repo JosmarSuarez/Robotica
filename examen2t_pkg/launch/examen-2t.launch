@@ -1,0 +1,10 @@
+<launch>
+  <arg name="model"/>
+  <param name="robot_description" textfile="$(find examen2t_pkg)/urdf/kr6.urdf"/>
+  <node name="publisher_scan" pkg="examen2t_pkg" type="publisher_scan"/>
+  <node name="rviz_publisher" pkg="examen2t_pkg" type="rviz_publisher"/>
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find examen2t_pkg)/urdf.rviz" required="true"/>
+  <node pkg="examen2t_pkg" type="lidar-detector.py" name="lidar_detector" output="screen">  </node>
+  <node pkg="examen2t_pkg" type="kinematics-solver2.py" name="kinematics_solver" output="screen">  </node>
+</launch>

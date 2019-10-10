@@ -1,0 +1,25 @@
+{
+    "configurations": [
+        {
+            "browse": {
+                "databaseFilename": "",
+                "limitSymbolsToIncludedHeaders": true
+            },
+            "includePath": [
+                "/home/josmar/imt_ws/devel/include",
+                "/opt/ros/kinetic/include",
+                "/home/josmar/imt_ws/src/ros_urdf_pkg/include",
+                "/home/josmar/imt_ws/src/urdf_pkg/include",
+                "/home/josmar/imt_ws/src/urdf_ws/include",
+                "/home/josmar/imt_ws/src/usb_cam/include",
+                "/usr/include"
+            ],
+            "name": "Linux",
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

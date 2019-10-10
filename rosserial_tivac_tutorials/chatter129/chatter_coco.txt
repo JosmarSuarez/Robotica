@@ -1,0 +1,83 @@
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
+// TivaC specific includes
+extern "C"
+{
+  #include <driverlib/sysctl.h>
+  #include <driverlib/gpio.h>
+  #include "inc/hw_ints.h"
+  #include "inc/hw_memmap.h"
+  #include "driverlib/interrupt.h"
+  #include "driverlib/pin_map.h"
+  #include "driverlib/timer.h"
+  #include "driverlib/pwm.h"
+}
+#include <ros.h>
+#include <std_msgs/String.h>
+#include <std_msgs/Int32.h>
+#include <std_msgs/Float64.h>
+
+int contador=0;
+int numero;
+void color(const std_msgs::Int32& msg)
+{
+numero =  msg.data;
+}
+ros::NodeHandle nh;
+ros::Subscriber<std_msgs::Int32> rgb_sub("dir_tiva", &color);
+int main(void)
+{
+MAP_FPUEnable();
+MAP_FPULazyStackingEnable();
+///////////////////****	HABILITAR PERIFERICOS ****//////////
+SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);
+SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+///*Salidas
+GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE,GPIO_PIN_0 | GPIO_PIN_1 );
+GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE,GPIO_PIN_0 | GPIO_PIN_4 );
+///*Inicializar
+GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0| GPIO_PIN_1 , 0x00);
+GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0| GPIO_PIN_4, 0x00);
+////////////////////////////////////////////////////////////
+
+MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ | SYSCTL_OSC_MAIN |SYSCTL_USE_PLL | SYSCTL_CFG_VCO_480), TM4C129FREQ);
+nh.initNode();
+nh.subscribe(rgb_sub);
+
+  while (1)
+  {
+if(numero==1)
+{
+GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0xFF);
+GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
+GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0| GPIO_PIN_4, 0x00);
+}
+else if(numero==2)
+{
+GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0xFF);
+GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0x00);
+GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0| GPIO_PIN_4, 0x00);
+}
+else if(numero==3)
+{
+GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
+GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0x00);
+GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0x00);
+GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0xFF);
+}
+else if(numero == 4)
+{
+GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0, 0x00);
+GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_1, 0x00);
+GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0, 0xFF);
+GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_4, 0x00);
+}
+else 
+{
+GPIOPinWrite(GPIO_PORTN_BASE, GPIO_PIN_0| GPIO_PIN_1 , 0xFF);
+GPIOPinWrite(GPIO_PORTF_BASE, GPIO_PIN_0| GPIO_PIN_4, 0xFF);
+}
+nh.spinOnce();
+  }
+}

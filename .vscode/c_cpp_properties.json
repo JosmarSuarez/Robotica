@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/opt/ros/kinetic/include",
+        "/home/josmar/imt_ws/src/ros_urdf_pkg/include",
+        "/home/josmar/imt_ws/src/urdf_pkg/include",
+        "/home/josmar/imt_ws/src/urdf_ws/include",
+        "/home/josmar/imt_ws/src/usb_cam/include",
+        "/usr/include"
+      ],
+      "name": "Linux"
+    }
+  ]
+}

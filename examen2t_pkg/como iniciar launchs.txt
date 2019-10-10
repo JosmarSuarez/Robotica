@@ -1,0 +1,18 @@
+python video-streamer.py
+python video-processor.py 
+roslaunch examen_pkg scara_visualizer.launch 
+
+
+
+Crear archivo launch con nombre del nodo
+Cambiar el archivo cmake list
+Copiar urdf.rviz
+
+
+catkin_make rosserial_tivac_tutorials_chatter129_chatter129.axf
+catkin_make rosserial_tivac_tutorials_chatter129_flash
+rosrun rosserial_python serial_node.py _port:=/dev/ttyACM1
+
+#En caso de no funcionar
+export TIVA_WARE_PATH=$HOME/<path_to_tivaware_root>
+export TIVA_FLASH_EXECUTABLE=lm4flash

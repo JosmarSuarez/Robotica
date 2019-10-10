@@ -1,0 +1,125 @@
+<robot name="kr6">
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <!--<cylinder length="0.01" radius="0.2"/> -->
+        <mesh filename="package://examen2t_pkg/mesh/kr6/base_link.dae"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="base_kuka">
+        <color rgba="0.50588 0.470588 0.38823 1"/>
+      </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://examen2t_pkg/mesh/kr6/base_link.stl" />
+        </geometry>
+      </collision>
+  </link>
+
+  <joint name="joint1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link1"/>
+    <origin xyz="0 0 0.400" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="300" velocity="0.1" lower="-2.9670597" upper="2.9670597"/>
+    <dynamics damping="50" friction="1"/>
+  </joint>
+
+  <link name="link1">
+    <visual>
+      <geometry>
+        <mesh filename="package://examen2t_pkg/mesh/kr6/link_1.dae"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="link1_kuka">
+        <color rgba="0.964706 0.47058823 0.15862745 1"/>
+      </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://examen2t_pkg/mesh/kr6/link_1.stl" />
+        </geometry>
+      </collision>
+  </link>
+  <joint name="joint2" type="revolute">
+    <parent link="link1"/>
+    <child link="link2"/>
+    <origin xyz="0.025 0 0" rpy="0 0 0"/>
+    <axis xyz="0 -1 0"/>
+    <limit effort="300" velocity="0.1" lower="-0.785398" upper="3.31612552"/>
+    <dynamics damping="50" friction="1"/>
+  </joint>
+
+  <link name="link2">
+    <visual>
+      <geometry>
+        <mesh filename="package://examen2t_pkg/mesh/kr6/link_2.dae"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="orange-kuka">
+        <color rgba="0.964706 0.47058823 0.15862745 1"/>
+      </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://examen2t_pkg/mesh/kr6/link_2.stl" />
+        </geometry>
+      </collision>
+  </link>
+  <joint name="joint3" type="revolute">
+    <parent link="link2"/>
+    <child link="link3"/>
+    <origin xyz="0.455 0 0" rpy="0 0 0"/>
+    <axis xyz="0 -1 0"/>
+    <limit effort="300" velocity="0.1" lower="-2.722713587" upper="2.094395067"/>
+    <dynamics damping="50" friction="1"/>
+  </joint>
+
+  <link name="link3">
+    <visual>
+      <geometry>
+        <mesh filename="package://examen2t_pkg/mesh/kr6/link_3.dae"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="orange-kuka">
+        <color rgba="0.964706 0.47058823 0.15862745 1"/>
+      </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://examen2t_pkg/mesh/kr6/link_3.stl" />
+        </geometry>
+      </collision>
+  </link>
+  <joint name="joint4" type="revolute">
+    <parent link="link3"/>
+    <child link="link4"/>
+    <origin xyz="0 0 0.035" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit effort="300" velocity="0.1" lower="-3.22886" upper="3.22886"/>
+    <dynamics damping="50" friction="1"/>
+  </joint>
+
+  <link name="link4">
+    <visual>
+      <geometry>
+        <mesh filename="package://examen2t_pkg/mesh/kr6/link_4.dae"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="orange-kuka">
+        <color rgba="0.964706 0.47058823 0.15862745 1"/>
+      </material>
+    </visual>
+    <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://examen2t_pkg/mesh/kr6/link_4.stl" />
+        </geometry>
+      </collision>
+  </link>
+</robot>

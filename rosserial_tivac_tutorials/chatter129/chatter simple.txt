@@ -1,0 +1,111 @@
+/*********************************************************************
+ *
+ *  Copyright (c) 2015 Robosavvy Ltd.
+ *  Author: Vitor Matos
+ *
+ *  rosserial_tivac chatter tutorial
+ *
+ *  On this demo your TivaC Launchpad Connected will publish a string
+ *  over the topic "/chatter".
+ *
+ * Full guide: http://wiki.ros.org/rosserial_tivac/Tutorials
+ *
+ *********************************************************************/
+
+#include <stdbool.h>
+#include <stdint.h>
+// TivaC specific includes
+extern "C"
+{
+  #include <driverlib/sysctl.h>
+  #include <driverlib/gpio.h>
+  #include "inc/hw_ints.h"
+  #include "inc/hw_memmap.h"
+  #include "driverlib/interrupt.h"
+  #include "driverlib/pin_map.h"
+  #include "driverlib/timer.h"
+  #include "driverlib/pwm.h"
+}
+// ROS includes
+#include <ros.h>
+#include <std_msgs/String.h>
+#include <std_msgs/Int32.h>
+#include <std_msgs/Float64.h> //include Float64
+#include <geometry_msgs/Twist.h> //Twist linear vel x,y,z  angular vel x,y,z
+
+#define PWM_FREQUENCY 100
+// ROS nodehandle
+ros::NodeHandle nh;
+int counter=0;
+int staten=0x00;
+int statef=0x00;
+uint32_t current_time=0;
+uint32_t angular_vel=0;
+float rpm_vel=0;
+std_msgs::Int32 int_msg;
+std_msgs::Int32 float_msg; // float64 msg
+ros::Publisher chatter("number", &float_msg);
+
+uint32_t g_ui32SysClock;
+
+//callback function for Twist messages
+//Twist
+//  -linear
+        // -x
+        // -y
+        // -z
+//  -angular
+        // -x
+        // -y
+        // -z
+void TwistMessage(const std_msgs::Int32& msg){
+	//float_msg.data = msg.angular.x;
+  if(msg.data == 1){staten=0x02;statef=0x00;}
+  if(msg.data == 2){staten=0x01;statef=0x00;}
+  if(msg.data == 3){staten=0x00;statef=0x02;}
+  if(msg.data == 4){staten=0x00;statef=0x01;}
+  if(msg.data == 5){staten=0x03;statef=0x03;}
+}
+
+
+
+//subscriber called subs_pose, topic--> poses , callback function--> TwistMessage
+ros::Subscriber<std_msgs::Int32> subs_pose("dir_tiva",TwistMessage);
+int main(void)
+{
+  // TivaC application specific code
+  MAP_FPUEnable();
+  MAP_FPULazyStackingEnable();
+  uint32_t ui32SysClkFreq,ui32PWMClock,ui32Load;
+  // Run from the PLL at 120 MHz.
+  ui32SysClkFreq=MAP_SysCtlClockFreqSet((SYSCTL_XTAL_25MHZ | SYSCTL_OSC_MAIN |
+                          SYSCTL_USE_PLL | SYSCTL_CFG_VCO_480), TM4C129FREQ);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPION);
+  SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF);
+
+  
+  //Salidas digitales
+  GPIOPinTypeGPIOOutput(GPIO_PORTN_BASE,GPIO_PIN_0| GPIO_PIN_1);
+  GPIOPinTypeGPIOOutput(GPIO_PORTF_BASE,GPIO_PIN_0| GPIO_PIN_4);
+  GPIOPinWrite(GPIO_PORTN_BASE,GPIO_PIN_1 | GPIO_PIN_0,0x01);
+  GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_4 | GPIO_PIN_0,0x01);
+
+  GPIOPadConfigSet(GPIO_PORTC_BASE,GPIO_PIN_4,GPIO_STRENGTH_2MA,GPIO_PIN_TYPE_STD_WPU);
+  ui32PWMClock=ui32SysClkFreq/64;//calculates the PWM clock
+	ui32Load=(ui32PWMClock/PWM_FREQUENCY)-1;//calculates the number of levels
+
+  // ROS nodehandle initialization and topic registration
+  nh.initNode();
+  nh.advertise(chatter);// registers publisher
+  nh.subscribe(subs_pose);//registers Subscriber
+  while (1)
+  {
+        // Handle all communications and callbacks.
+    nh.spinOnce();
+    GPIOPinWrite(GPIO_PORTN_BASE,GPIO_PIN_1 | GPIO_PIN_0, staten);
+    GPIOPinWrite(GPIO_PORTF_BASE,GPIO_PIN_4 | GPIO_PIN_0,statef);
+    // Delay for a bit.
+    nh.getHardware()->delay(100);
+  }
+}
+
